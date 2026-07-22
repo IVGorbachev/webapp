@@ -1,0 +1,40 @@
+version: '3.9'
+
+services:
+  postgres-test:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: webapp_test_db
+      POSTGRES_USER: webapp_user
+      POSTGRES_PASSWORD: webapp_pass
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U webapp_user"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - test-net
+
+  backend-test:
+    build:
+      context: ./backend
+      target: test
+    environment:
+      NODE_ENV: test
+      DB_HOST: postgres-test
+      DB_PORT: 5432
+      DB_NAME: webapp_test_db
+      DB_USER: webapp_user
+      DB_PASSWORD: webapp_pass
+      JWT_SECRET: test-secret
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    networks:
+      - test-net
+
+networks:
+  test-net:
+    driver: bridge
