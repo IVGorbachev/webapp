@@ -113,7 +113,7 @@ jobs:
   needs: build-and-push
   if: always()
   steps:
-    - name: Deploy via SSH
+    - name: Deploy via SSH                         # <-- ДОБАВИТЬ ДЕФИС ЗДЕСЬ!
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: 82.202.156.71
