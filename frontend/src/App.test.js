@@ -36,7 +36,7 @@ describe('App', () => {
 
   it('renders login page when not authenticated', () => {
     render(<App />);
-    expect(screen.getByText('Sign in')).toBeInTheDocument();
+    expect(await screen.findByText('Sign in')).toBeInTheDocument();
   });
 
   it('shows register link on login page', () => {
