@@ -10,7 +10,7 @@ spec:
   resources:
     requests:
       storage: 10Gi
-  storageClassName: standard
+  # storageClassName: standard  # <-- ЗАКОММЕНТИРУЙТЕ ИЛИ УДАЛИТЕ
 
 ---
 apiVersion: apps/v1
@@ -89,4 +89,4 @@ spec:
   ports:
     - port: 5432
       targetPort: 5432
-  clusterIP: None  # Headless service for StatefulSet
+  clusterIP: None

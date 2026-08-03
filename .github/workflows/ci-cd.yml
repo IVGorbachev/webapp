@@ -7,11 +7,10 @@ on:
     branches: [main]
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_PREFIX: ${{ github.repository_owner }}/webapp
+  REGISTRY: docker.io
+  IMAGE_NAME: webapp
 
 jobs:
-  # ── Test Backend ─────────────────────────────────────────────────────
   test-backend:
     name: Test Backend
     runs-on: ubuntu-latest
@@ -29,21 +28,17 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: backend/package-lock.json
-
       - name: Install dependencies
         run: npm ci
         working-directory: ./backend
-
       - name: Run tests
         run: npm test -- --coverage --forceExit
         working-directory: ./backend
@@ -56,131 +51,80 @@ jobs:
           DB_PASSWORD: webapp_pass
           JWT_SECRET: test-secret
 
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          directory: ./backend/coverage
-
-  # ── Test Frontend ────────────────────────────────────────────────────
   test-frontend:
     name: Test Frontend
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
-
       - name: Install dependencies
         run: npm ci
         working-directory: ./frontend
-
       - name: Run tests
         run: npm test -- --coverage --watchAll=false
         working-directory: ./frontend
         env:
           CI: true
 
-  # ── Build & Push Docker Images ───────────────────────────────────────
   build-and-push:
     name: Build & Push Images
     runs-on: ubuntu-latest
     needs: [test-backend, test-frontend]
     if: github.ref == 'refs/heads/main'
-    permissions:
-      contents: read
-      packages: write
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Container Registry
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (backend)
-        id: meta-backend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-backend
-          tags: |
-            type=sha,prefix=
-            type=raw,value=latest
-            type=semver,pattern={{version}}
-
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Build and push backend
         uses: docker/build-push-action@v5
         with:
           context: ./backend
           push: true
-          tags: ${{ steps.meta-backend.outputs.tags }}
-          labels: ${{ steps.meta-backend.outputs.labels }}
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}-backend:latest
           target: production
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Extract metadata (frontend)
-        id: meta-frontend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-frontend
-
       - name: Build and push frontend
         uses: docker/build-push-action@v5
         with:
           context: ./frontend
           push: true
-          tags: ${{ steps.meta-frontend.outputs.tags }}
+          tags: ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}-frontend:latest
           target: production
           build-args: |
-            REACT_APP_API_URL=https://api.webapp.example.com
+            REACT_APP_API_URL=https://johnkarlo.ru/api
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # ── Deploy to Kubernetes ─────────────────────────────────────────────
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
     needs: build-and-push
     environment: production
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Set up kubectl
         uses: azure/setup-kubectl@v3
-
       - name: Configure kubeconfig
         run: |
           mkdir -p ~/.kube
           echo "${{ secrets.KUBECONFIG }}" | base64 -d > ~/.kube/config
-
-      - name: Update image tags
+      - name: Deploy to Kubernetes
         run: |
-          SHA=${{ github.sha }}
-          SHORT_SHA=${SHA::7}
-          kubectl set image deployment/webapp-backend \
-            backend=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-backend:${SHORT_SHA} \
-            -n webapp
-          kubectl set image deployment/webapp-frontend \
-            frontend=${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}-frontend:${SHORT_SHA} \
-            -n webapp
-
-      - name: Wait for rollout
-        run: |
+          kubectl rollout restart deployment/webapp-backend -n webapp
+          kubectl rollout restart deployment/webapp-frontend -n webapp
           kubectl rollout status deployment/webapp-backend -n webapp --timeout=5m
           kubectl rollout status deployment/webapp-frontend -n webapp --timeout=5m
-
       - name: Verify deployment
         run: |
           kubectl get pods -n webapp
