@@ -49,7 +49,7 @@ export const LoginPage = ({ onSwitch }) => {
                 type="email"
                 value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                placeholder="you@example.com"
+                placeholder="my@example.com"
                 autoComplete="email"
                 required
               />
