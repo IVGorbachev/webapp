@@ -146,7 +146,7 @@ jobs:
           labels: ${{ steps.meta-frontend.outputs.labels }}
           target: production
           build-args: |
-            REACT_APP_API_URL=http://192.168.0.243:30266
+            REACT_APP_API_URL=http://johnkarlo.ru
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
