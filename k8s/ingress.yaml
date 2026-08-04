@@ -4,17 +4,8 @@ metadata:
   name: webapp-ingress
   namespace: webapp
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure   # 👈 Для Traefik
-    # traefik.ingress.kubernetes.io/router.tls: "true"                  # 👈 Для HTTPS
-    # kubernetes.io/ingress.class: "nginx"  # 👈 УДАЛИТЬ или заменить на traefik
-    # cert-manager.io/cluster-issuer: "letsencrypt-prod"  # 👈 УДАЛИТЬ (пока нет cert-manager)
-    # nginx.ingress.kubernetes.io/proxy-body-size: "10m"  # 👈 УДАЛИТЬ
-    #nginx.ingress.kubernetes.io/proxy-read-timeout: "60"  # 👈 УДАЛИТЬ
+    traefik.ingress.kubernetes.io/router.entrypoints: web
 spec:
-  # tls:  # 👈 ЗАКОММЕНТИРОВАТЬ (пока нет сертификата)
-  #   - hosts:
-  #       - johnkarlo.ru
-  #     secretName: johnkarlo-tls-secret
   rules:
     - host: johnkarlo.ru
       http:
