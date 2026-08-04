@@ -2,15 +2,14 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
-const { query } = require('../db');
+const { query, seedTasksForUser } = require('../db');
 const { generateToken, authenticate } = require('../middleware/auth');
 const logger = require('../logger');
 
-// POST /api/auth/register
 router.post('/register', [
-  body('name').trim().notEmpty().withMessage('Name is required').isLength({ max: 100 }),
-  body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('name').trim().notEmpty().withMessage('Имя обязательно').isLength({ max: 100 }),
+  body('email').isEmail().normalizeEmail().withMessage('Укажите корректный email'),
+  body('password').isLength({ min: 6 }).withMessage('Пароль должен содержать минимум 6 символов'),
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -22,29 +21,33 @@ router.post('/register', [
   try {
     const existing = await query('SELECT id FROM users WHERE email = $1', [email]);
     if (existing.rows.length > 0) {
-      return res.status(409).json({ error: 'Email already registered' });
+      return res.status(409).json({ error: 'Email уже зарегистрирован' });
     }
+
+    const countResult = await query('SELECT COUNT(*) FROM users');
+    const isFirstUser = parseInt(countResult.rows[0].count, 10) === 0;
+    const role = isFirstUser ? 'admin' : 'user';
 
     const salt = await bcrypt.genSalt(10);
     const password_hash = await bcrypt.hash(password, salt);
 
     const result = await query(
-      'INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3) RETURNING id, name, email, role, created_at',
-      [name, email, password_hash]
+      'INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, $4) RETURNING id, name, email, role, created_at',
+      [name, email, password_hash, role]
     );
 
     const user = result.rows[0];
+    await seedTasksForUser(user.id);
     const token = generateToken(user.id);
 
     logger.info(`New user registered: ${email}`);
     res.status(201).json({ user, token });
   } catch (err) {
     logger.error('Register error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
-// POST /api/auth/login
 router.post('/login', [
   body('email').isEmail().normalizeEmail(),
   body('password').notEmpty(),
@@ -63,14 +66,14 @@ router.post('/login', [
     );
 
     if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Неверный email или пароль' });
     }
 
     const user = result.rows[0];
     const valid = await bcrypt.compare(password, user.password_hash);
 
     if (!valid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Неверный email или пароль' });
     }
 
     const token = generateToken(user.id);
@@ -80,11 +83,10 @@ router.post('/login', [
     res.json({ user: safeUser, token });
   } catch (err) {
     logger.error('Login error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
-// GET /api/auth/me
 router.get('/me', authenticate, async (req, res) => {
   res.json({ user: req.user });
 });

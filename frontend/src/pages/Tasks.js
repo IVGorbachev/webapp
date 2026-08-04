@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { tasksAPI } from '../utils/api';
+import { tStatus, tPriority, pluralTasks } from '../utils/i18n';
 import { PlusIcon, EditIcon, TrashIcon, XIcon, TaskIcon } from '../components/Icons';
 
 const PRIORITY_OPTIONS = ['low', 'medium', 'high'];
@@ -17,7 +18,7 @@ const TaskModal = ({ task, onClose, onSave }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.title.trim()) { setError('Title is required'); return; }
+    if (!form.title.trim()) { setError('Название обязательно'); return; }
     setLoading(true);
     try {
       if (task) {
@@ -27,7 +28,7 @@ const TaskModal = ({ task, onClose, onSave }) => {
       }
       onSave();
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to save task');
+      setError(err.response?.data?.error || 'Не удалось сохранить задачу');
     } finally {
       setLoading(false);
     }
@@ -37,65 +38,65 @@ const TaskModal = ({ task, onClose, onSave }) => {
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal">
         <div className="modal-header">
-          <h3 className="modal-title">{task ? 'Edit Task' : 'New Task'}</h3>
+          <h3 className="modal-title">{task ? 'Редактировать задачу' : 'Новая задача'}</h3>
           <button className="btn btn-ghost" onClick={onClose}><XIcon /></button>
         </div>
         <div className="modal-body">
           {error && <div className="alert alert-error">{error}</div>}
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label className="form-label">Title *</label>
+              <label className="form-label">Название *</label>
               <input
                 className={`form-control ${!form.title && error ? 'error' : ''}`}
                 value={form.title}
                 onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                placeholder="What needs to be done?"
+                placeholder="Что нужно сделать?"
                 autoFocus
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Description</label>
+              <label className="form-label">Описание</label>
               <textarea
                 className="form-control"
                 value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                placeholder="Additional details..."
+                placeholder="Дополнительные детали..."
                 rows={3}
               />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div className="form-group">
-                <label className="form-label">Priority</label>
+                <label className="form-label">Приоритет</label>
                 <select
                   className="form-control"
                   value={form.priority}
                   onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}
                 >
                   {PRIORITY_OPTIONS.map(p => (
-                    <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
+                    <option key={p} value={p}>{tPriority(p)}</option>
                   ))}
                 </select>
               </div>
               {task && (
                 <div className="form-group">
-                  <label className="form-label">Status</label>
+                  <label className="form-label">Статус</label>
                   <select
                     className="form-control"
                     value={form.status}
                     onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
                   >
                     {STATUS_OPTIONS.map(s => (
-                      <option key={s} value={s}>{s.replace('_', ' ')}</option>
+                      <option key={s} value={s}>{tStatus(s)}</option>
                     ))}
                   </select>
                 </div>
               )}
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
-              <button type="button" className="btn btn-outline" onClick={onClose}>Cancel</button>
+              <button type="button" className="btn btn-outline" onClick={onClose}>Отмена</button>
               <button type="submit" className="btn btn-primary" disabled={loading}>
                 {loading ? <span className="spinner" style={{ borderTopColor: 'white' }} /> : null}
-                {task ? 'Save Changes' : 'Create Task'}
+                {task ? 'Сохранить' : 'Создать'}
               </button>
             </div>
           </form>
@@ -132,7 +133,7 @@ const Tasks = () => {
   useEffect(() => { loadTasks(); }, [loadTasks]);
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this task?')) return;
+    if (!window.confirm('Удалить эту задачу?')) return;
     try {
       await tasksAPI.delete(id);
       setTasks(t => t.filter(task => task.id !== id));
@@ -152,38 +153,36 @@ const Tasks = () => {
 
   return (
     <div className="page-content">
-      {/* Filters bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
         <div style={{ flex: 1 }}>
           <span style={{ fontSize: 14, color: 'var(--gray-500)' }}>
-            {total} task{total !== 1 ? 's' : ''}
+            {pluralTasks(total)}
           </span>
         </div>
         <select
           className="form-control"
-          style={{ width: 140 }}
+          style={{ width: 160 }}
           value={filters.status}
           onChange={e => setFilters(f => ({ ...f, status: e.target.value }))}
         >
-          <option value="">All Statuses</option>
-          {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
+          <option value="">Все статусы</option>
+          {STATUS_OPTIONS.map(s => <option key={s} value={s}>{tStatus(s)}</option>)}
         </select>
         <select
           className="form-control"
-          style={{ width: 140 }}
+          style={{ width: 160 }}
           value={filters.priority}
           onChange={e => setFilters(f => ({ ...f, priority: e.target.value }))}
         >
-          <option value="">All Priorities</option>
-          {PRIORITY_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
+          <option value="">Все приоритеты</option>
+          {PRIORITY_OPTIONS.map(p => <option key={p} value={p}>{tPriority(p)}</option>)}
         </select>
         <button className="btn btn-primary" onClick={() => { setEditTask(null); setModalOpen(true); }}>
           <PlusIcon />
-          New Task
+          Новая задача
         </button>
       </div>
 
-      {/* Tasks table */}
       {loading ? (
         <div style={{ textAlign: 'center', padding: 60 }}>
           <div className="spinner" style={{ width: 28, height: 28, margin: '0 auto' }} />
@@ -192,8 +191,8 @@ const Tasks = () => {
         <div className="card">
           <div className="empty-state">
             <TaskIcon size={48} />
-            <h3>No tasks found</h3>
-            <p>Create your first task to get started</p>
+            <h3>Задачи не найдены</h3>
+            <p>Создайте первую задачу, чтобы начать</p>
           </div>
         </div>
       ) : (
@@ -202,11 +201,11 @@ const Tasks = () => {
             <table>
               <thead>
                 <tr>
-                  <th>Title</th>
-                  <th>Priority</th>
-                  <th>Status</th>
-                  <th>Created</th>
-                  <th style={{ textAlign: 'right' }}>Actions</th>
+                  <th>Название</th>
+                  <th>Приоритет</th>
+                  <th>Статус</th>
+                  <th>Создана</th>
+                  <th style={{ textAlign: 'right' }}>Действия</th>
                 </tr>
               </thead>
               <tbody>
@@ -220,33 +219,33 @@ const Tasks = () => {
                         </div>
                       )}
                     </td>
-                    <td><span className={`badge badge-${task.priority}`}>{task.priority}</span></td>
+                    <td><span className={`badge badge-${task.priority}`}>{tPriority(task.priority)}</span></td>
                     <td>
                       <button
                         className={`badge badge-${task.status}`}
                         style={{ cursor: 'pointer', border: 'none', background: undefined }}
                         onClick={() => handleStatusToggle(task)}
-                        title="Click to advance status"
+                        title="Нажмите для смены статуса"
                       >
-                        {task.status.replace('_', ' ')}
+                        {tStatus(task.status)}
                       </button>
                     </td>
                     <td style={{ color: 'var(--gray-500)', fontSize: 13 }}>
-                      {new Date(task.created_at).toLocaleDateString()}
+                      {new Date(task.created_at).toLocaleDateString('ru-RU')}
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
                         <button
                           className="btn btn-ghost btn-sm"
                           onClick={() => { setEditTask(task); setModalOpen(true); }}
-                          title="Edit"
+                          title="Редактировать"
                         >
                           <EditIcon size={15} />
                         </button>
                         <button
                           className="btn btn-ghost btn-sm"
                           onClick={() => handleDelete(task.id)}
-                          title="Delete"
+                          title="Удалить"
                           style={{ color: 'var(--red)' }}
                         >
                           <TrashIcon size={15} />

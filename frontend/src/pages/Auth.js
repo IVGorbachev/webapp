@@ -27,17 +27,17 @@ export const LoginPage = ({ onSwitch }) => {
           <span className="auth-brand-text">DeployKit</span>
         </div>
         <div className="auth-hero-text">
-          <h2>Automate your<br />deployments</h2>
-          <p>Docker and Kubernetes-powered CI/CD pipeline. Deploy with confidence, scale without limits.</p>
+          <h2>Автоматизируйте<br />развёртывания</h2>
+          <p>CI/CD-пайплайн на базе Docker и Kubernetes. Развёртывайте уверенно, масштабируйтесь без ограничений.</p>
         </div>
       </div>
       <div className="auth-right">
         <div className="auth-form-box">
-          <h1>Sign in</h1>
+          <h1>Вход</h1>
           <p className="subtitle">
-            Don't have an account?{' '}
+            Нет аккаунта?{' '}
             <a href="#register" onClick={e => { e.preventDefault(); onSwitch('register'); }}>
-              Create one
+              Создать
             </a>
           </p>
           {error && <div className="alert alert-error">{error}</div>}
@@ -55,13 +55,13 @@ export const LoginPage = ({ onSwitch }) => {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Password</label>
+              <label className="form-label">Пароль</label>
               <input
                 className="form-control"
                 type="password"
                 value={form.password}
                 onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                placeholder="Your password"
+                placeholder="Ваш пароль"
                 autoComplete="current-password"
                 required
               />
@@ -72,12 +72,12 @@ export const LoginPage = ({ onSwitch }) => {
               style={{ width: '100%', marginTop: 8, justifyContent: 'center' }}
               disabled={loading}
             >
-              {loading ? <span className="spinner" style={{ borderTopColor: 'white' }} /> : 'Sign in'}
+              {loading ? <span className="spinner" style={{ borderTopColor: 'white' }} /> : 'Войти'}
             </button>
           </form>
           <div className="divider" />
           <p style={{ fontSize: 12, color: 'var(--gray-400)', textAlign: 'center' }}>
-            Demo: use any email + password (min 6 chars)
+            Демо: любой email + пароль (мин. 6 символов)
           </p>
         </div>
       </div>
@@ -110,28 +110,28 @@ export const RegisterPage = ({ onSwitch }) => {
           <span className="auth-brand-text">DeployKit</span>
         </div>
         <div className="auth-hero-text">
-          <h2>Ship faster,<br />break nothing</h2>
-          <p>Containerized deployments with automatic rollbacks, health checks, and zero-downtime updates.</p>
+          <h2>Быстрее релизы,<br />меньше сбоев</h2>
+          <p>Контейнерные развёртывания с автоматическим откатом, проверками здоровья и обновлениями без простоя.</p>
         </div>
       </div>
       <div className="auth-right">
         <div className="auth-form-box">
-          <h1>Create account</h1>
+          <h1>Регистрация</h1>
           <p className="subtitle">
-            Already have an account?{' '}
+            Уже есть аккаунт?{' '}
             <a href="#login" onClick={e => { e.preventDefault(); onSwitch('login'); }}>
-              Sign in
+              Войти
             </a>
           </p>
           {error && <div className="alert alert-error">{error}</div>}
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label className="form-label">Full Name</label>
+              <label className="form-label">Полное имя</label>
               <input
                 className="form-control"
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                placeholder="John Doe"
+                placeholder="Иван Иванов"
                 required
               />
             </div>
@@ -148,13 +148,13 @@ export const RegisterPage = ({ onSwitch }) => {
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Password</label>
+              <label className="form-label">Пароль</label>
               <input
                 className="form-control"
                 type="password"
                 value={form.password}
                 onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                placeholder="At least 6 characters"
+                placeholder="Минимум 6 символов"
                 autoComplete="new-password"
                 required
                 minLength={6}
@@ -166,7 +166,7 @@ export const RegisterPage = ({ onSwitch }) => {
               style={{ width: '100%', marginTop: 8, justifyContent: 'center' }}
               disabled={loading}
             >
-              {loading ? <span className="spinner" style={{ borderTopColor: 'white' }} /> : 'Create Account'}
+              {loading ? <span className="spinner" style={{ borderTopColor: 'white' }} /> : 'Создать аккаунт'}
             </button>
           </form>
         </div>

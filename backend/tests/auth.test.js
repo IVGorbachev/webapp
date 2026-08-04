@@ -1,11 +1,15 @@
 const request = require('supertest');
 const { app } = require('../src/server');
 
-// Mock DB
 jest.mock('../src/db', () => ({
   query: jest.fn(),
   initDB: jest.fn(),
-  pool: { on: jest.fn(), end: jest.fn() },
+  seedTasksForUser: jest.fn().mockResolvedValue(undefined),
+  pool: {
+    on: jest.fn(),
+    end: jest.fn(),
+    query: jest.fn().mockResolvedValue({ rows: [{ '?column?': 1 }] }),
+  },
 }));
 
 const { query } = require('../src/db');
@@ -18,16 +22,18 @@ describe('Auth Routes', () => {
 
   describe('POST /api/auth/register', () => {
     it('should register a new user', async () => {
-      query.mockResolvedValueOnce({ rows: [] }); // Check existing
-      query.mockResolvedValueOnce({
-        rows: [{
-          id: 'uuid-123',
-          name: 'Test User',
-          email: 'test@example.com',
-          role: 'user',
-          created_at: new Date().toISOString(),
-        }],
-      });
+      query
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [{ count: '0' }] })
+        .mockResolvedValueOnce({
+          rows: [{
+            id: 'uuid-123',
+            name: 'Test User',
+            email: 'test@example.com',
+            role: 'admin',
+            created_at: new Date().toISOString(),
+          }],
+        });
 
       const res = await request(app)
         .post('/api/auth/register')
@@ -46,7 +52,7 @@ describe('Auth Routes', () => {
         .send({ name: 'Test', email: 'taken@example.com', password: 'password123' });
 
       expect(res.status).toBe(409);
-      expect(res.body.error).toMatch(/already registered/i);
+      expect(res.body.error).toMatch(/зарегистрирован/i);
     });
 
     it('should validate required fields', async () => {
@@ -115,6 +121,7 @@ describe('Auth Routes', () => {
       const res = await request(app).get('/health');
       expect(res.status).toBe(200);
       expect(res.body.status).toBe('ok');
+      expect(res.body.database).toBe('ok');
       expect(res.body).toHaveProperty('uptime');
       expect(res.body).toHaveProperty('version');
     });

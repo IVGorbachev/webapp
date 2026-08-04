@@ -65,6 +65,7 @@ const initDB = async () => {
     `);
 
     logger.info('Database initialized successfully');
+    await seedDemoData(client);
   } catch (err) {
     logger.error('Database initialization error:', err);
     throw err;
@@ -73,6 +74,80 @@ const initDB = async () => {
   }
 };
 
+const seedDemoData = async (client) => {
+  let users = await client.query('SELECT id, role FROM users');
+
+  if (users.rows.length === 0) {
+    const bcrypt = require('bcryptjs');
+    const password_hash = await bcrypt.hash('admin123', 10);
+    const created = await client.query(
+      `INSERT INTO users (name, email, password_hash, role)
+       VALUES ($1, $2, $3, 'admin') RETURNING id, role`,
+      ['Администратор', 'admin@deploykit.local', password_hash]
+    );
+    users = { rows: created.rows };
+    logger.info('Demo admin created: admin@deploykit.local / admin123');
+  }
+
+  const demoTasks = [
+    ['Настроить Docker Compose', 'Развернуть PostgreSQL, backend и frontend', 'done', 'high'],
+    ['Подключить CI/CD пайплайн', 'Настроить GitHub Actions для автоматического деплоя', 'in_progress', 'high'],
+    ['Проверить health-check', 'Убедиться, что /health возвращает статус ok', 'pending', 'medium'],
+    ['Обновить документацию', 'Дополнить README инструкциями на русском', 'pending', 'low'],
+    ['Настроить Kubernetes', 'Применить манифесты из папки k8s/', 'in_progress', 'medium'],
+  ];
+
+  for (const user of users.rows) {
+    const count = await client.query('SELECT COUNT(*) FROM tasks WHERE user_id = $1', [user.id]);
+    if (parseInt(count.rows[0].count, 10) > 0) continue;
+
+    for (const [title, description, status, priority] of demoTasks) {
+      await client.query(
+        'INSERT INTO tasks (title, description, status, priority, user_id) VALUES ($1, $2, $3, $4, $5)',
+        [title, description, status, priority, user.id]
+      );
+    }
+  }
+
+  const deplCount = await client.query('SELECT COUNT(*) FROM deployments');
+  if (parseInt(deplCount.rows[0].count, 10) === 0) {
+    const admin = users.rows.find(u => u.role === 'admin') || users.rows[0];
+    await client.query(
+      `INSERT INTO deployments (version, environment, status, image_tag, deployed_by, logs, finished_at)
+       VALUES ($1, 'production', 'success', 'webapp-backend:v1.0.0', $2, $3, NOW()),
+              ($4, 'staging', 'success', 'webapp-frontend:v1.0.1', $2, $5, NOW())`,
+      [
+        'v1.0.0', admin.id,
+        'Запуск пайплайна развёртывания...\nВсе поды работают.\nРазвёртывание завершено!',
+        'v1.0.1',
+        'Тестовое развёртывание завершено успешно.',
+      ]
+    );
+  }
+
+  logger.info('Demo data seeded');
+};
+
+const seedTasksForUser = async (userId) => {
+  const count = await query('SELECT COUNT(*) FROM tasks WHERE user_id = $1', [userId]);
+  if (parseInt(count.rows[0].count, 10) > 0) return;
+
+  const demoTasks = [
+    ['Настроить Docker Compose', 'Развернуть PostgreSQL, backend и frontend', 'done', 'high'],
+    ['Подключить CI/CD пайплайн', 'Настроить GitHub Actions для автоматического деплоя', 'in_progress', 'high'],
+    ['Проверить health-check', 'Убедиться, что /health возвращает статус ok', 'pending', 'medium'],
+    ['Обновить документацию', 'Дополнить README инструкциями на русском', 'pending', 'low'],
+    ['Настроить Kubernetes', 'Применить манифесты из папки k8s/', 'in_progress', 'medium'],
+  ];
+
+  for (const [title, description, status, priority] of demoTasks) {
+    await query(
+      'INSERT INTO tasks (title, description, status, priority, user_id) VALUES ($1, $2, $3, $4, $5)',
+      [title, description, status, priority, userId]
+    );
+  }
+};
+
 const query = (text, params) => pool.query(text, params);
 
-module.exports = { pool, query, initDB };
+module.exports = { pool, query, initDB, seedTasksForUser };

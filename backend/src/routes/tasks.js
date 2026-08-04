@@ -5,7 +5,6 @@ const { query } = require('../db');
 const { authenticate } = require('../middleware/auth');
 const logger = require('../logger');
 
-// GET /api/tasks
 router.get('/', authenticate, async (req, res) => {
   const { status, priority, page = 1, limit = 20 } = req.query;
   const offset = (parseInt(page) - 1) * parseInt(limit);
@@ -39,13 +38,12 @@ router.get('/', authenticate, async (req, res) => {
     });
   } catch (err) {
     logger.error('Get tasks error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
-// POST /api/tasks
 router.post('/', authenticate, [
-  body('title').trim().notEmpty().withMessage('Title is required').isLength({ max: 200 }),
+  body('title').trim().notEmpty().withMessage('Название обязательно').isLength({ max: 200 }),
   body('description').optional().trim(),
   body('priority').optional().isIn(['low', 'medium', 'high']),
 ], async (req, res) => {
@@ -64,11 +62,10 @@ router.post('/', authenticate, [
     res.status(201).json({ task: result.rows[0] });
   } catch (err) {
     logger.error('Create task error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
-// PUT /api/tasks/:id
 router.put('/:id', authenticate, [
   body('title').optional().trim().isLength({ min: 1, max: 200 }),
   body('status').optional().isIn(['pending', 'in_progress', 'done']),
@@ -88,7 +85,7 @@ router.put('/:id', authenticate, [
       [id, req.user.id]
     );
     if (existing.rows.length === 0) {
-      return res.status(404).json({ error: 'Task not found' });
+      return res.status(404).json({ error: 'Задача не найдена' });
     }
 
     const result = await query(
@@ -104,11 +101,10 @@ router.put('/:id', authenticate, [
     res.json({ task: result.rows[0] });
   } catch (err) {
     logger.error('Update task error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
-// DELETE /api/tasks/:id
 router.delete('/:id', authenticate, async (req, res) => {
   const { id } = req.params;
   try {
@@ -117,16 +113,15 @@ router.delete('/:id', authenticate, async (req, res) => {
       [id, req.user.id]
     );
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Task not found' });
+      return res.status(404).json({ error: 'Задача не найдена' });
     }
-    res.json({ message: 'Task deleted', id });
+    res.json({ message: 'Задача удалена', id });
   } catch (err) {
     logger.error('Delete task error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
-// GET /api/tasks/stats
 router.get('/stats', authenticate, async (req, res) => {
   try {
     const result = await query(
@@ -141,7 +136,7 @@ router.get('/stats', authenticate, async (req, res) => {
     res.json({ stats: result.rows[0] });
   } catch (err) {
     logger.error('Stats error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 

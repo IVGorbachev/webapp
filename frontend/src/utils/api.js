@@ -18,10 +18,12 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      if (!window.location.pathname.includes('login')) {
+        window.location.href = '/';
+      }
     }
     return Promise.reject(error);
   }

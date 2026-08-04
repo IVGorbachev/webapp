@@ -1,3 +1,4 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -15,7 +16,7 @@ spec:
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 1
-      maxUnavailable: 0
+      maxUnavailable: 0   # Zero-downtime deployment
   template:
     metadata:
       labels:
@@ -25,7 +26,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: backend
-          image: gorbachevivan72/webapp-backend:latest  # <-- ИЗМЕНИТЕ
+          image: registry.example.com/webapp-backend:1.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
@@ -88,6 +89,7 @@ spec:
   type: ClusterIP
 
 ---
+# Horizontal Pod Autoscaler
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:

@@ -5,7 +5,12 @@ const { app } = require('../src/server');
 jest.mock('../src/db', () => ({
   query: jest.fn(),
   initDB: jest.fn(),
-  pool: { on: jest.fn(), end: jest.fn() },
+  seedTasksForUser: jest.fn().mockResolvedValue(undefined),
+  pool: {
+    on: jest.fn(),
+    end: jest.fn(),
+    query: jest.fn().mockResolvedValue({ rows: [{ '?column?': 1 }] }),
+  },
 }));
 
 const { query } = require('../src/db');
@@ -17,7 +22,6 @@ const authToken = jwt.sign({ userId: mockUser.id }, JWT_SECRET, { expiresIn: '1h
 describe('Tasks Routes', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    // Default auth mock
     query.mockImplementation((sql) => {
       if (sql.includes('SELECT id, name, email, role FROM users')) {
         return Promise.resolve({ rows: [mockUser] });
@@ -34,9 +38,9 @@ describe('Tasks Routes', () => {
       ];
 
       query
-        .mockResolvedValueOnce({ rows: [mockUser] }) // auth
-        .mockResolvedValueOnce({ rows: fakeTasks })   // tasks
-        .mockResolvedValueOnce({ rows: [{ count: '2' }] }); // count
+        .mockResolvedValueOnce({ rows: [mockUser] })
+        .mockResolvedValueOnce({ rows: fakeTasks })
+        .mockResolvedValueOnce({ rows: [{ count: '2' }] });
 
       const res = await request(app)
         .get('/api/tasks')
@@ -144,7 +148,7 @@ describe('Tasks Routes', () => {
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(res.status).toBe(200);
-      expect(res.body.message).toMatch(/deleted/i);
+      expect(res.body.message).toMatch(/удалена/i);
     });
   });
 
@@ -153,7 +157,7 @@ describe('Tasks Routes', () => {
       query
         .mockResolvedValueOnce({ rows: [mockUser] })
         .mockResolvedValueOnce({
-          rows: [{ pending: '3', in_progress: '1', done: '5', total: '9' }]
+          rows: [{ pending: '3', in_progress: '1', done: '5', total: '9' }],
         });
 
       const res = await request(app)

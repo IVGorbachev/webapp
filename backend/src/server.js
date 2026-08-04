@@ -5,7 +5,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 
-const { initDB } = require('./db');
+const { initDB, pool } = require('./db');
 const logger = require('./logger');
 const authRoutes = require('./routes/auth');
 const taskRoutes = require('./routes/tasks');
@@ -25,7 +25,7 @@ app.use(cors({
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 200,
-  message: { error: 'Too many requests, please try again later.' },
+  message: { error: 'Слишком много запросов, попробуйте позже.' },
 });
 app.use('/api/', limiter);
 
@@ -39,9 +39,17 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', async (req, res) => {
+  let database = 'ok';
+  try {
+    await pool.query('SELECT 1');
+  } catch {
+    database = 'error';
+  }
+
   res.json({
-    status: 'ok',
+    status: database === 'ok' ? 'ok' : 'degraded',
+    database,
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
@@ -56,13 +64,13 @@ app.use('/api/deployments', deploymentRoutes);
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+  res.status(404).json({ error: 'Маршрут не найден' });
 });
 
 // Error handler
 app.use((err, req, res, next) => {
   logger.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+  res.status(500).json({ error: 'Внутренняя ошибка сервера' });
 });
 
 // Start server

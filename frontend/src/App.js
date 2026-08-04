@@ -9,10 +9,10 @@ import { LoginPage, RegisterPage } from './pages/Auth';
 import './index.css';
 
 const PAGE_TITLES = {
-  dashboard: 'Dashboard',
-  tasks: 'Tasks',
-  deployments: 'Deployments',
-  infrastructure: 'Infrastructure',
+  dashboard: 'Панель управления',
+  tasks: 'Задачи',
+  deployments: 'Развёртывания',
+  infrastructure: 'Инфраструктура',
 };
 
 const AppContent = () => {

@@ -2,7 +2,6 @@ import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
-// Mock API
 jest.mock('./utils/api', () => ({
   authAPI: {
     login: jest.fn(),
@@ -21,7 +20,7 @@ jest.mock('./utils/api', () => ({
     create: jest.fn(),
   },
   healthAPI: {
-    check: jest.fn().mockResolvedValue({ data: { status: 'ok', uptime: 1000, version: '1.0.0' } }),
+    check: jest.fn().mockResolvedValue({ data: { status: 'ok', database: 'ok', uptime: 1000, version: '1.0.0' } }),
   },
   default: {},
 }));
@@ -34,30 +33,30 @@ describe('App', () => {
     jest.clearAllMocks();
   });
 
-  it('renders login page when not authenticated', () => {
+  it('отображает страницу входа без авторизации', () => {
     render(<App />);
-    expect(await screen.findByText('Sign in')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Вход' })).toBeInTheDocument();
   });
 
-  it('shows register link on login page', () => {
+  it('показывает ссылку на регистрацию', () => {
     render(<App />);
-    expect(screen.getByText(/Create one/i)).toBeInTheDocument();
+    expect(screen.getByText(/Создать/i)).toBeInTheDocument();
   });
 
-  it('switches to register page', () => {
+  it('переключается на страницу регистрации', () => {
     render(<App />);
-    fireEvent.click(screen.getByText(/Create one/i));
-    expect(screen.getByText('Create account')).toBeInTheDocument();
+    fireEvent.click(screen.getByText(/Создать/i));
+    expect(screen.getByRole('heading', { name: 'Регистрация' })).toBeInTheDocument();
   });
 
-  it('switches back to login from register', () => {
+  it('возвращается на страницу входа с регистрации', () => {
     render(<App />);
-    fireEvent.click(screen.getByText(/Create one/i));
-    fireEvent.click(screen.getByText(/Sign in/i));
-    expect(screen.getByRole('heading', { name: 'Sign in' })).toBeInTheDocument();
+    fireEvent.click(screen.getByText(/Создать/i));
+    fireEvent.click(screen.getByText(/^Войти$/i));
+    expect(screen.getByRole('heading', { name: 'Вход' })).toBeInTheDocument();
   });
 
-  it('renders dashboard after login', async () => {
+  it('отображает панель после входа', async () => {
     const { authAPI } = require('./utils/api');
     authAPI.login.mockResolvedValueOnce({
       data: {
@@ -71,33 +70,33 @@ describe('App', () => {
     fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
       target: { value: 'test@test.com' },
     });
-    fireEvent.change(screen.getByPlaceholderText('Your password'), {
+    fireEvent.change(screen.getByPlaceholderText('Ваш пароль'), {
       target: { value: 'password123' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /Sign in/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Войти/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Welcome back/i)).toBeInTheDocument();
+      expect(screen.getByText(/С возвращением/i)).toBeInTheDocument();
     });
   });
 
-  it('shows error on failed login', async () => {
+  it('показывает ошибку при неудачном входе', async () => {
     const { authAPI } = require('./utils/api');
     authAPI.login.mockRejectedValueOnce({
-      response: { data: { error: 'Invalid credentials' } },
+      response: { data: { error: 'Неверный email или пароль' } },
     });
 
     render(<App />);
     fireEvent.change(screen.getByPlaceholderText('you@example.com'), {
       target: { value: 'bad@test.com' },
     });
-    fireEvent.change(screen.getByPlaceholderText('Your password'), {
+    fireEvent.change(screen.getByPlaceholderText('Ваш пароль'), {
       target: { value: 'wrong' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /Sign in/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Войти/i }));
 
     await waitFor(() => {
-      expect(screen.getByText('Invalid credentials')).toBeInTheDocument();
+      expect(screen.getByText('Неверный email или пароль')).toBeInTheDocument();
     });
   });
 });

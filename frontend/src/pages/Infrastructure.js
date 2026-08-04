@@ -9,41 +9,40 @@ const InfoBlock = ({ label, value, mono }) => (
 );
 
 const K8S_PODS = [
-  { name: 'webapp-frontend-6d9b8f-xkp2r', status: 'Running', ready: '1/1', restarts: 0, age: '2d' },
-  { name: 'webapp-backend-7c4d9a-mnz8q', status: 'Running', ready: '1/1', restarts: 0, age: '2d' },
-  { name: 'webapp-postgres-0', status: 'Running', ready: '1/1', restarts: 0, age: '5d' },
-  { name: 'webapp-redis-5f7d8c-plq9w', status: 'Running', ready: '1/1', restarts: 1, age: '3d' },
+  { name: 'webapp-frontend-6d9b8f-xkp2r', status: 'Running', ready: '1/1', restarts: 0, age: '2 дн.' },
+  { name: 'webapp-backend-7c4d9a-mnz8q', status: 'Running', ready: '1/1', restarts: 0, age: '2 дн.' },
+  { name: 'webapp-postgres-0', status: 'Running', ready: '1/1', restarts: 0, age: '5 дн.' },
+  { name: 'webapp-redis-5f7d8c-plq9w', status: 'Running', ready: '1/1', restarts: 1, age: '3 дн.' },
 ];
 
 const DOCKER_IMAGES = [
-  { name: 'webapp-frontend', tag: 'v1.0.0', size: '142 MB', created: '2 days ago' },
-  { name: 'webapp-backend', tag: 'v1.0.0', size: '198 MB', created: '2 days ago' },
-  { name: 'postgres', tag: '15-alpine', size: '89 MB', created: '5 days ago' },
-  { name: 'redis', tag: '7-alpine', size: '41 MB', created: '3 days ago' },
+  { name: 'webapp-frontend', tag: 'v1.0.0', size: '142 МБ', created: '2 дня назад' },
+  { name: 'webapp-backend', tag: 'v1.0.0', size: '198 МБ', created: '2 дня назад' },
+  { name: 'postgres', tag: '15-alpine', size: '89 МБ', created: '5 дней назад' },
+  { name: 'redis', tag: '7-alpine', size: '41 МБ', created: '3 дня назад' },
 ];
 
 const Infrastructure = () => {
   return (
     <div className="page-content">
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
-        {/* Kubernetes cluster */}
         <div className="card">
           <div className="card-header">
             <span className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <ContainerIcon size={16} style={{ stroke: 'var(--gray-500)' }} />
-              Kubernetes Cluster
+              Кластер Kubernetes
             </span>
-            <span className="badge badge-success">Active</span>
+            <span className="badge badge-success">Активен</span>
           </div>
           <div className="card-body">
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-              <InfoBlock label="Cluster" value="webapp-k8s-cluster" />
-              <InfoBlock label="Version" value="v1.28.4" />
+              <InfoBlock label="Кластер" value="webapp-k8s-cluster" />
+              <InfoBlock label="Версия" value="v1.28.4" />
               <InfoBlock label="Namespace" value="production" mono />
-              <InfoBlock label="Nodes" value="3 Ready" />
+              <InfoBlock label="Узлы" value="3 готовы" />
             </div>
             <div className="divider" />
-            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>Pods</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5 }}>Поды</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {K8S_PODS.map(pod => (
                 <div key={pod.name} style={{
@@ -56,22 +55,21 @@ const Infrastructure = () => {
                       {pod.name}
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 2 }}>
-                      Ready: {pod.ready} · Restarts: {pod.restarts} · Age: {pod.age}
+                      Готовность: {pod.ready} · Перезапуски: {pod.restarts} · Возраст: {pod.age}
                     </div>
                   </div>
-                  <span className="badge badge-success" style={{ fontSize: 11 }}>{pod.status}</span>
+                  <span className="badge badge-success" style={{ fontSize: 11 }}>Работает</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Docker images */}
         <div className="card">
           <div className="card-header">
             <span className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <ServerIcon size={16} style={{ stroke: 'var(--gray-500)' }} />
-              Docker Images
+              Docker-образы
             </span>
           </div>
           <div className="card-body">
@@ -88,7 +86,7 @@ const Infrastructure = () => {
                     </div>
                     <span style={{ fontSize: 12, color: 'var(--gray-500)', background: 'var(--gray-200)', padding: '2px 8px', borderRadius: 20 }}>{img.size}</span>
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 4 }}>Created {img.created}</div>
+                  <div style={{ fontSize: 11, color: 'var(--gray-400)', marginTop: 4 }}>Создан {img.created}</div>
                 </div>
               ))}
             </div>
@@ -96,12 +94,11 @@ const Infrastructure = () => {
         </div>
       </div>
 
-      {/* Architecture diagram (text-based) */}
       <div className="card">
         <div className="card-header">
           <span className="card-title" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <ActivityIcon size={16} style={{ stroke: 'var(--gray-500)' }} />
-            System Architecture
+            Архитектура системы
           </span>
         </div>
         <div className="card-body">
@@ -116,7 +113,7 @@ const Infrastructure = () => {
             border: '1px solid var(--gray-200)',
             whiteSpace: 'pre'
           }}>
-{`  Developer
+{`  Разработчик
       │
       │  git push
       ▼
@@ -126,7 +123,7 @@ const Infrastructure = () => {
       │
       └── kubectl apply ──────────────────────────────┐
                                                        │
-  ┌──────────────── Kubernetes Cluster ────────────── ▼ ───────────────┐
+  ┌──────────────── Кластер Kubernetes ────────────── ▼ ───────────────┐
   │                                                                     │
   │  ┌─────────────────┐   ┌──────────────────┐   ┌───────────────┐    │
   │  │  Ingress / LB   │──►│  React Frontend  │   │  PostgreSQL   │    │
@@ -142,10 +139,10 @@ const Infrastructure = () => {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginTop: 20 }}>
             {[
-              { label: 'Replicas (FE)', value: '2' },
-              { label: 'Replicas (BE)', value: '3' },
-              { label: 'CPU Limit', value: '500m' },
-              { label: 'Memory Limit', value: '512Mi' },
+              { label: 'Реплики (FE)', value: '2' },
+              { label: 'Реплики (BE)', value: '3' },
+              { label: 'Лимит CPU', value: '500m' },
+              { label: 'Лимит RAM', value: '512Mi' },
             ].map(({ label, value }) => (
               <div key={label} style={{ textAlign: 'center', padding: '12px', background: 'var(--gray-50)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--gray-200)' }}>
                 <div style={{ fontSize: 22, fontWeight: 700, color: 'var(--blue)' }}>{value}</div>

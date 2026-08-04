@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { tasksAPI, deploymentsAPI, healthAPI } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
+import { tStatus, tEnvironment } from '../utils/i18n';
 import {
   TaskIcon, DeployIcon, ActivityIcon, ServerIcon,
   CheckIcon, ClockIcon, ContainerIcon
@@ -17,17 +18,19 @@ const Dashboard = ({ onNavigate }) => {
   useEffect(() => {
     const load = async () => {
       try {
+        const h = await healthAPI.check();
+        setHealth(h.data);
+      } catch {
+        setHealth({ status: 'unreachable', database: 'error' });
+      }
+
+      try {
         const [statsRes, deplRes] = await Promise.all([
           tasksAPI.getStats(),
           deploymentsAPI.getAll(),
         ]);
         setStats(statsRes.data.stats);
         setDeployments(deplRes.data.deployments.slice(0, 5));
-
-        try {
-          const h = await healthAPI.check();
-          setHealth(h.data);
-        } catch { setHealth({ status: 'unreachable' }); }
       } catch (err) {
         console.error(err);
       } finally {
@@ -38,9 +41,9 @@ const Dashboard = ({ onNavigate }) => {
   }, []);
 
   const chartData = stats ? [
-    { name: 'Pending', value: parseInt(stats.pending) || 0 },
-    { name: 'In Progress', value: parseInt(stats.in_progress) || 0 },
-    { name: 'Done', value: parseInt(stats.done) || 0 },
+    { name: tStatus('pending'), value: parseInt(stats.pending) || 0 },
+    { name: tStatus('in_progress'), value: parseInt(stats.in_progress) || 0 },
+    { name: tStatus('done'), value: parseInt(stats.done) || 0 },
   ] : [];
 
   const CHART_COLORS = ['#9CA3AF', '#1A3A6B', '#34A853'];
@@ -57,14 +60,13 @@ const Dashboard = ({ onNavigate }) => {
     <div className="page-content">
       <div style={{ marginBottom: 24 }}>
         <h2 style={{ fontSize: 22, fontWeight: 700, color: 'var(--gray-900)' }}>
-          Welcome back, {user?.name?.split(' ')[0]}
+          С возвращением, {user?.name?.split(' ')[0]}
         </h2>
         <p style={{ color: 'var(--gray-500)', fontSize: 14, marginTop: 4 }}>
-          Here's what's happening with your deployment pipeline today.
+          Обзор вашего пайплайна развёртывания на сегодня.
         </p>
       </div>
 
-      {/* Stat cards */}
       <div className="stat-grid">
         <div className="stat-card">
           <div className="stat-icon">
@@ -72,7 +74,7 @@ const Dashboard = ({ onNavigate }) => {
           </div>
           <div>
             <div className="stat-value">{stats?.total || 0}</div>
-            <div className="stat-label">Total Tasks</div>
+            <div className="stat-label">Всего задач</div>
           </div>
         </div>
         <div className="stat-card">
@@ -81,7 +83,7 @@ const Dashboard = ({ onNavigate }) => {
           </div>
           <div>
             <div className="stat-value">{stats?.in_progress || 0}</div>
-            <div className="stat-label">In Progress</div>
+            <div className="stat-label">В работе</div>
           </div>
         </div>
         <div className="stat-card">
@@ -90,7 +92,7 @@ const Dashboard = ({ onNavigate }) => {
           </div>
           <div>
             <div className="stat-value">{stats?.done || 0}</div>
-            <div className="stat-label">Completed</div>
+            <div className="stat-label">Завершено</div>
           </div>
         </div>
         <div className="stat-card">
@@ -99,16 +101,15 @@ const Dashboard = ({ onNavigate }) => {
           </div>
           <div>
             <div className="stat-value">{deployments.length}</div>
-            <div className="stat-label">Deployments</div>
+            <div className="stat-label">Развёртывания</div>
           </div>
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
-        {/* Task chart */}
         <div className="card">
           <div className="card-header">
-            <span className="card-title">Task Overview</span>
+            <span className="card-title">Обзор задач</span>
           </div>
           <div className="card-body">
             {chartData.some(d => d.value > 0) ? (
@@ -133,23 +134,22 @@ const Dashboard = ({ onNavigate }) => {
               </ResponsiveContainer>
             ) : (
               <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--gray-400)', fontSize: 14 }}>
-                No tasks yet
+                Задач пока нет
               </div>
             )}
           </div>
         </div>
 
-        {/* Health status */}
         <div className="card">
           <div className="card-header">
-            <span className="card-title">System Health</span>
+            <span className="card-title">Состояние системы</span>
           </div>
           <div className="card-body">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
-                { label: 'API Server', status: health?.status === 'ok', icon: ServerIcon },
-                { label: 'Database', status: health?.status === 'ok', icon: ContainerIcon },
-                { label: 'CI/CD Pipeline', status: deployments.some(d => d.status === 'success'), icon: ActivityIcon },
+                { label: 'API-сервер', status: health?.status === 'ok', icon: ServerIcon },
+                { label: 'База данных', status: health?.database === 'ok', icon: ContainerIcon },
+                { label: 'CI/CD пайплайн', status: health?.status === 'ok', icon: ActivityIcon },
               ].map(({ label, status, icon: Icon }) => (
                 <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid var(--gray-100)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -159,26 +159,25 @@ const Dashboard = ({ onNavigate }) => {
                     <span style={{ fontSize: 14, color: 'var(--gray-700)', fontWeight: 500 }}>{label}</span>
                   </div>
                   <span className={`badge badge-${status ? 'success' : 'failed'}`}>
-                    {status ? 'Operational' : 'Offline'}
+                    {status ? 'Работает' : 'Недоступно'}
                   </span>
                 </div>
               ))}
             </div>
             {health?.uptime && (
               <p style={{ fontSize: 12, color: 'var(--gray-400)', marginTop: 12 }}>
-                Uptime: {Math.floor(health.uptime / 60)}m {Math.floor(health.uptime % 60)}s · v{health.version}
+                Аптайм: {Math.floor(health.uptime / 60)}м {Math.floor(health.uptime % 60)}с · v{health.version}
               </p>
             )}
           </div>
         </div>
       </div>
 
-      {/* Recent deployments */}
       <div className="card">
         <div className="card-header">
-          <span className="card-title">Recent Deployments</span>
+          <span className="card-title">Последние развёртывания</span>
           <button className="btn btn-outline btn-sm" onClick={() => onNavigate('deployments')}>
-            View All
+            Смотреть все
           </button>
         </div>
         {deployments.length > 0 ? (
@@ -186,10 +185,10 @@ const Dashboard = ({ onNavigate }) => {
             <table>
               <thead>
                 <tr>
-                  <th>Version</th>
-                  <th>Environment</th>
-                  <th>Status</th>
-                  <th>Started</th>
+                  <th>Версия</th>
+                  <th>Окружение</th>
+                  <th>Статус</th>
+                  <th>Начало</th>
                 </tr>
               </thead>
               <tbody>
@@ -200,10 +199,10 @@ const Dashboard = ({ onNavigate }) => {
                         {d.version}
                       </code>
                     </td>
-                    <td><span className={`badge badge-${d.environment}`}>{d.environment}</span></td>
-                    <td><span className={`badge badge-${d.status}`}>{d.status}</span></td>
+                    <td><span className={`badge badge-${d.environment}`}>{tEnvironment(d.environment)}</span></td>
+                    <td><span className={`badge badge-${d.status}`}>{tStatus(d.status)}</span></td>
                     <td style={{ color: 'var(--gray-500)', fontSize: 13 }}>
-                      {new Date(d.started_at).toLocaleDateString()}
+                      {new Date(d.started_at).toLocaleDateString('ru-RU')}
                     </td>
                   </tr>
                 ))}
@@ -214,7 +213,7 @@ const Dashboard = ({ onNavigate }) => {
           <div className="card-body">
             <div className="empty-state" style={{ padding: '30px 0' }}>
               <DeployIcon size={40} />
-              <p>No deployments yet</p>
+              <p>Развёртываний пока нет</p>
             </div>
           </div>
         )}

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { authAPI } from '../utils/api';
 
 const AuthContext = createContext(null);
@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user);
       return data.user;
     } catch (err) {
-      const msg = err.response?.data?.error || 'Login failed';
+      const msg = err.response?.data?.error || 'Ошибка входа';
       setError(msg);
       throw new Error(msg);
     } finally {
@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user);
       return data.user;
     } catch (err) {
-      const msg = err.response?.data?.error || 'Registration failed';
+      const msg = err.response?.data?.error || 'Ошибка регистрации';
       setError(msg);
       throw new Error(msg);
     } finally {
@@ -54,6 +54,18 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
     setUser(null);
   }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    authAPI.me()
+      .then(({ data }) => {
+        setUser(data.user);
+        localStorage.setItem('user', JSON.stringify(data.user));
+      })
+      .catch(() => logout());
+  }, [logout]);
 
   return (
     <AuthContext.Provider value={{ user, loading, error, login, register, logout, setError }}>

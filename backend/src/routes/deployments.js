@@ -5,7 +5,6 @@ const { query } = require('../db');
 const { authenticate, requireAdmin } = require('../middleware/auth');
 const logger = require('../logger');
 
-// GET /api/deployments
 router.get('/', authenticate, async (req, res) => {
   try {
     const result = await query(
@@ -18,13 +17,12 @@ router.get('/', authenticate, async (req, res) => {
     res.json({ deployments: result.rows });
   } catch (err) {
     logger.error('Get deployments error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
-// POST /api/deployments
 router.post('/', authenticate, requireAdmin, [
-  body('version').trim().notEmpty().withMessage('Version is required'),
+  body('version').trim().notEmpty().withMessage('Версия обязательна'),
   body('environment').optional().isIn(['development', 'staging', 'production']),
   body('image_tag').optional().trim(),
 ], async (req, res) => {
@@ -43,19 +41,16 @@ router.post('/', authenticate, requireAdmin, [
     );
 
     const deployment = result.rows[0];
-
-    // Simulate async deployment process
     simulateDeployment(deployment.id);
 
     logger.info(`Deployment started: ${version} -> ${environment}`);
     res.status(201).json({ deployment });
   } catch (err) {
     logger.error('Create deployment error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
-// GET /api/deployments/:id
 router.get('/:id', authenticate, async (req, res) => {
   try {
     const result = await query(
@@ -66,21 +61,20 @@ router.get('/:id', authenticate, async (req, res) => {
       [req.params.id]
     );
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Deployment not found' });
+      return res.status(404).json({ error: 'Развёртывание не найдено' });
     }
     res.json({ deployment: result.rows[0] });
   } catch (err) {
     logger.error('Get deployment error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Внутренняя ошибка сервера' });
   }
 });
 
-// Simulate deployment lifecycle
 async function simulateDeployment(deploymentId) {
   const steps = [
-    { status: 'running', delay: 500, log: 'Starting deployment pipeline...\nPulling Docker image...' },
-    { status: 'running', delay: 1500, log: 'Applying Kubernetes manifests...\nWaiting for pods to be ready...' },
-    { status: 'success', delay: 2500, log: 'All pods healthy.\nDeployment complete!\nService is live.' },
+    { status: 'running', delay: 500, log: 'Запуск пайплайна развёртывания...\nЗагрузка Docker-образа...' },
+    { status: 'running', delay: 1500, log: 'Применение манифестов Kubernetes...\nОжидание готовности подов...' },
+    { status: 'success', delay: 2500, log: 'Все поды работают.\nРазвёртывание завершено!\nСервис доступен.' },
   ];
 
   for (const step of steps) {

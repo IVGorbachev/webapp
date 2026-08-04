@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { deploymentsAPI } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
+import { tStatus, tEnvironment, pluralDeployments } from '../utils/i18n';
 import { PlusIcon, XIcon, DeployIcon, RefreshIcon } from '../components/Icons';
 
 const DeployModal = ({ onClose, onDeploy }) => {
@@ -10,13 +11,13 @@ const DeployModal = ({ onClose, onDeploy }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.version.trim()) { setError('Version is required'); return; }
+    if (!form.version.trim()) { setError('Версия обязательна'); return; }
     setLoading(true);
     try {
       await deploymentsAPI.create(form);
       onDeploy();
     } catch (err) {
-      setError(err.response?.data?.error || 'Deployment failed to start');
+      setError(err.response?.data?.error || 'Не удалось запустить развёртывание');
     } finally {
       setLoading(false);
     }
@@ -26,51 +27,51 @@ const DeployModal = ({ onClose, onDeploy }) => {
     <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
       <div className="modal">
         <div className="modal-header">
-          <h3 className="modal-title">New Deployment</h3>
+          <h3 className="modal-title">Новое развёртывание</h3>
           <button className="btn btn-ghost" onClick={onClose}><XIcon /></button>
         </div>
         <div className="modal-body">
           {error && <div className="alert alert-error">{error}</div>}
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label className="form-label">Version *</label>
+              <label className="form-label">Версия *</label>
               <input
                 className="form-control"
                 value={form.version}
                 onChange={e => setForm(f => ({ ...f, version: e.target.value }))}
-                placeholder="e.g. v1.2.3"
+                placeholder="например, v1.2.3"
                 autoFocus
               />
             </div>
             <div className="form-group">
-              <label className="form-label">Environment</label>
+              <label className="form-label">Окружение</label>
               <select
                 className="form-control"
                 value={form.environment}
                 onChange={e => setForm(f => ({ ...f, environment: e.target.value }))}
               >
-                <option value="development">Development</option>
-                <option value="staging">Staging</option>
-                <option value="production">Production</option>
+                <option value="development">Разработка</option>
+                <option value="staging">Тестирование</option>
+                <option value="production">Продакшн</option>
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Docker Image Tag</label>
+              <label className="form-label">Тег Docker-образа</label>
               <input
                 className="form-control mono"
                 value={form.image_tag}
                 onChange={e => setForm(f => ({ ...f, image_tag: e.target.value }))}
-                placeholder="e.g. registry.example.com/app:1.2.3"
+                placeholder="например, registry.example.com/app:1.2.3"
               />
             </div>
             <div className="alert alert-info" style={{ fontSize: 13, marginTop: 8 }}>
-              This will trigger a Kubernetes rolling update in the selected environment.
+              Будет запущено rolling update в Kubernetes для выбранного окружения.
             </div>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
-              <button type="button" className="btn btn-outline" onClick={onClose}>Cancel</button>
+              <button type="button" className="btn btn-outline" onClick={onClose}>Отмена</button>
               <button type="submit" className="btn btn-primary" disabled={loading}>
                 {loading ? <span className="spinner" style={{ borderTopColor: 'white' }} /> : <DeployIcon size={15} />}
-                Deploy
+                Развернуть
               </button>
             </div>
           </form>
@@ -97,14 +98,14 @@ const Deployments = () => {
 
   useEffect(() => {
     load();
-    const interval = setInterval(load, 5000); // Poll every 5s
+    const interval = setInterval(load, 5000);
     return () => clearInterval(interval);
   }, [load]);
 
   const formatDuration = (start, end) => {
-    if (!end) return 'Running...';
+    if (!end) return 'Выполняется...';
     const s = Math.floor((new Date(end) - new Date(start)) / 1000);
-    return s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`;
+    return s < 60 ? `${s}с` : `${Math.floor(s / 60)}м ${s % 60}с`;
   };
 
   return (
@@ -112,23 +113,22 @@ const Deployments = () => {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
         <div style={{ flex: 1 }}>
           <span style={{ fontSize: 14, color: 'var(--gray-500)' }}>
-            {deployments.length} deployment{deployments.length !== 1 ? 's' : ''}
+            {pluralDeployments(deployments.length)}
           </span>
         </div>
         <button className="btn btn-outline btn-sm" onClick={load}>
           <RefreshIcon size={14} />
-          Refresh
+          Обновить
         </button>
         {user?.role === 'admin' && (
           <button className="btn btn-primary" onClick={() => setModalOpen(true)}>
             <PlusIcon />
-            Deploy
+            Развернуть
           </button>
         )}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
-        {/* Deployments list */}
         <div>
           {loading ? (
             <div style={{ textAlign: 'center', padding: 60 }}>
@@ -138,8 +138,8 @@ const Deployments = () => {
             <div className="card">
               <div className="empty-state">
                 <DeployIcon size={48} />
-                <h3>No deployments yet</h3>
-                <p>Start your first deployment</p>
+                <h3>Развёртываний пока нет</h3>
+                <p>Запустите первое развёртывание</p>
               </div>
             </div>
           ) : (
@@ -161,16 +161,16 @@ const Deployments = () => {
                       <code style={{ fontSize: 14, fontWeight: 600, color: 'var(--gray-900)', background: 'var(--gray-100)', padding: '2px 8px', borderRadius: 4 }}>
                         {d.version}
                       </code>
-                      <span className={`badge badge-${d.status}`}>{d.status}</span>
+                      <span className={`badge badge-${d.status}`}>{tStatus(d.status)}</span>
                     </div>
                     <div style={{ display: 'flex', gap: 12, fontSize: 12, color: 'var(--gray-500)' }}>
-                      <span><span className={`badge badge-${d.environment}`} style={{ fontSize: 11 }}>{d.environment}</span></span>
-                      <span>{new Date(d.started_at).toLocaleString()}</span>
+                      <span><span className={`badge badge-${d.environment}`} style={{ fontSize: 11 }}>{tEnvironment(d.environment)}</span></span>
+                      <span>{new Date(d.started_at).toLocaleString('ru-RU')}</span>
                       <span>{formatDuration(d.started_at, d.finished_at)}</span>
                     </div>
                     {d.deployed_by_name && (
                       <div style={{ fontSize: 12, color: 'var(--gray-400)', marginTop: 4 }}>
-                        by {d.deployed_by_name}
+                        автор: {d.deployed_by_name}
                       </div>
                     )}
                   </div>
@@ -180,21 +180,20 @@ const Deployments = () => {
           )}
         </div>
 
-        {/* Detail panel */}
         <div>
           {selected ? (
             <div className="card" style={{ position: 'sticky', top: 80 }}>
               <div className="card-header">
-                <span className="card-title">Deployment Details</span>
-                <span className={`badge badge-${selected.status}`}>{selected.status}</span>
+                <span className="card-title">Детали развёртывания</span>
+                <span className={`badge badge-${selected.status}`}>{tStatus(selected.status)}</span>
               </div>
               <div className="card-body">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
                   {[
-                    ['Version', <code style={{ background: 'var(--gray-100)', padding: '2px 6px', borderRadius: 4 }}>{selected.version}</code>],
-                    ['Environment', <span className={`badge badge-${selected.environment}`}>{selected.environment}</span>],
-                    ['Started', new Date(selected.started_at).toLocaleString()],
-                    ['Duration', formatDuration(selected.started_at, selected.finished_at)],
+                    ['Версия', <code style={{ background: 'var(--gray-100)', padding: '2px 6px', borderRadius: 4 }}>{selected.version}</code>],
+                    ['Окружение', <span className={`badge badge-${selected.environment}`}>{tEnvironment(selected.environment)}</span>],
+                    ['Начало', new Date(selected.started_at).toLocaleString('ru-RU')],
+                    ['Длительность', formatDuration(selected.started_at, selected.finished_at)],
                   ].map(([label, val]) => (
                     <div key={label}>
                       <div style={{ fontSize: 11, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>{label}</div>
@@ -204,13 +203,13 @@ const Deployments = () => {
                 </div>
                 {selected.image_tag && (
                   <div style={{ marginBottom: 16 }}>
-                    <div style={{ fontSize: 11, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Image</div>
+                    <div style={{ fontSize: 11, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4 }}>Образ</div>
                     <code style={{ fontSize: 12, color: 'var(--gray-700)' }}>{selected.image_tag}</code>
                   </div>
                 )}
                 {selected.logs && (
                   <div>
-                    <div style={{ fontSize: 11, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Deployment Logs</div>
+                    <div style={{ fontSize: 11, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>Логи развёртывания</div>
                     <div className="log-box">{selected.logs}</div>
                   </div>
                 )}
@@ -220,7 +219,7 @@ const Deployments = () => {
             <div className="card">
               <div className="empty-state" style={{ padding: '60px 20px' }}>
                 <DeployIcon size={40} />
-                <p>Select a deployment to view details</p>
+                <p>Выберите развёртывание для просмотра деталей</p>
               </div>
             </div>
           )}

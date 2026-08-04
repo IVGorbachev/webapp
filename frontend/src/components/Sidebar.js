@@ -1,14 +1,15 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { tRole } from '../utils/i18n';
 import {
   DashboardIcon, TaskIcon, DeployIcon, LogoutIcon, LogoIcon, ServerIcon
 } from './Icons';
 
 const NAV_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', icon: DashboardIcon },
-  { id: 'tasks', label: 'Tasks', icon: TaskIcon },
-  { id: 'deployments', label: 'Deployments', icon: DeployIcon },
-  { id: 'infrastructure', label: 'Infrastructure', icon: ServerIcon },
+  { id: 'dashboard', label: 'Панель', icon: DashboardIcon },
+  { id: 'tasks', label: 'Задачи', icon: TaskIcon },
+  { id: 'deployments', label: 'Развёртывания', icon: DeployIcon },
+  { id: 'infrastructure', label: 'Инфраструктура', icon: ServerIcon },
 ];
 
 const Sidebar = ({ activePage, onNavigate }) => {
@@ -24,13 +25,13 @@ const Sidebar = ({ activePage, onNavigate }) => {
           </div>
           <div>
             <div className="logo-text">DeployKit</div>
-            <div className="logo-sub">CI/CD Platform</div>
+            <div className="logo-sub">CI/CD платформа</div>
           </div>
         </div>
       </div>
 
       <nav className="sidebar-nav">
-        <div className="nav-section-label">Main</div>
+        <div className="nav-section-label">Основное</div>
         {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -50,12 +51,12 @@ const Sidebar = ({ activePage, onNavigate }) => {
           </div>
           <div className="user-info">
             <div className="user-name">{user?.name}</div>
-            <div className="user-role">{user?.role}</div>
+            <div className="user-role">{tRole(user?.role)}</div>
           </div>
         </div>
         <button className="nav-item" onClick={logout} style={{ marginTop: 8 }}>
           <LogoutIcon />
-          <span>Sign Out</span>
+          <span>Выйти</span>
         </button>
       </div>
     </aside>
