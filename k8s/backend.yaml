@@ -26,7 +26,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: backend
-          image: ghcr.io/ivgorbache/webapp-backend:latest
+          image: ghcr.io/ivgorbachev/webapp-backend:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
