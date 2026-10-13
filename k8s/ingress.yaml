@@ -4,8 +4,10 @@ metadata:
   name: webapp-ingress
   namespace: webapp
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60"
 spec:
+  ingressClassName: nginx
   rules:
     - host: johnkarlo.ru
       http:
