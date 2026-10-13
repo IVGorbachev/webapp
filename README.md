@@ -3,7 +3,7 @@
 > ВКР: Проектирование и реализация системы автоматизированного развёртывания веб-приложения на основе Docker и Kubernetes
 
 [![CI/CD](https://github.com/your-org/webapp/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/your-org/webapp/actions)
-
+test
 ---
 
 ## Стек технологий
